@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
+from app.routers.auth import router as auth_router
+
 
 app = FastAPI(
     title="Open Team Manager API",
@@ -18,6 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 
 @app.get("/health", tags=["System"])
 async def health_check():
