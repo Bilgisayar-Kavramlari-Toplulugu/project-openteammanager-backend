@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     class Config:
         env_file = "/app/.env"
         case_sensitive = True
+        extra = "ignore"
 
 
 settings = Settings()
