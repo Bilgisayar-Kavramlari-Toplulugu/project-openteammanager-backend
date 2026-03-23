@@ -15,6 +15,12 @@ load_dotenv()
 
 TEST_DATABASE_URL = os.getenv("DATABASE_URL").replace("/otm_db", "/otm_test")
 
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    from app.middleware.rate_limiting import _instance
+    if _instance is not None:
+        _instance.storage._store.clear()
+    yield
 
 @pytest_asyncio.fixture(scope="function")
 async def client():
@@ -41,3 +47,32 @@ async def client():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
     await engine.dispose()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def auth_client(client: AsyncClient):
+    """Kayıtlı ve giriş yapmış kullanıcı ile client döner."""
+    await client.post("/api/v1/auth/register", json={
+        "email": "owner@example.com",
+        "username": "owner",
+        "full_name": "Owner User",
+        "password": "Test1234!"
+    })
+    response = await client.post("/api/v1/auth/login", json={
+        "email": "owner@example.com",
+        "password": "Test1234!"
+    })
+    token = response.json()["access_token"]
+    client.headers.update({"Authorization": f"Bearer {token}"})
+    return client
+
+
+@pytest_asyncio.fixture(scope="function")
+async def org(auth_client: AsyncClient):
+    """Test için hazır bir organizasyon döner."""
+    response = await auth_client.post("/api/v1/organizations", json={
+        "name": "Test Org",
+        "slug": "test-org",
+        "description": "Test organizasyonu"
+    })
+    return response.json()
