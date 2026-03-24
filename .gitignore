@@ -30,10 +30,3 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
-
-# .gitignore dosyana şunları ekle
-otm-env/
-__pycache__/
-*.pyc
-.idea/
-
