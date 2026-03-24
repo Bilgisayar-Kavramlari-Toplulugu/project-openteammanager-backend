@@ -3,9 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.routers.auth import router as auth_router
 from app.middleware.rate_limiting import RateLimiterMiddleware, InMemoryStorage
-from app.routers.organizations import router as organizations_router
-from app.routers.projects import router as projects_router
-
 
 app = FastAPI(
     title="Open Team Manager API",
@@ -26,8 +23,6 @@ app.add_middleware(
 app.add_middleware(RateLimiterMiddleware, storage=InMemoryStorage())
 
 app.include_router(auth_router)
-app.include_router(organizations_router)
-app.include_router(projects_router)
 
 @app.get("/health", tags=["System"])
 async def health_check():
