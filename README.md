@@ -1,15 +1,11 @@
-# 🧭🤝 Open Team Manager
+# Ekip yönetimini basitleştir, verimliliği artır! (Örnek)
 
 <div align="center">
 
-[![GitHub](https://img.shields.io/badge/GitHub-Bilgisayar%20Kavramlari%20Toplulugu-181717?style=flat-square\&logo=github\&logoColor=white)](https://github.com/Bilgisayar-Kavramlari-Toplulugu/project-openteammanager-backend)
+[![GitHub](https://img.shields.io/badge/GitHub-Bilgisayar-Kavramlari-Toplulugu-181717?style=flat-square&logo=github)](https://github.com/Bilgisayar-Kavramlari-Toplulugu/project-openteammanager-backend)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square\&logo=next.js)](https://nextjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=flat-square\&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=flat-square\&logo=postgresql\&logoColor=white)](https://www.postgresql.org/)
 
-
-**Part of [Open Team Manager](docs/Project-Definition.md) - [Bilgisayar Kavramları Topluluğu](https://github.com/Bilgisayar-Kavramlari-Toplulugu)**
+**Part of [Ekip yönetimini basitleştir, verimliliği artır!](docs/Project-Definition.md)**
 
 </div>
 
@@ -20,29 +16,17 @@
 
 <br>
 
-> **ÖNEMLİ:** Bu repository **Open Team Manager** projesinin bir parçasıdır. Proje hakkında detaylı bilgi için [`docs/Project-Definition.md`](docs/Project-Definition.md) dosyasına bakın.
+> **ÖNEMLİ:** Bu repository **Ekip yönetimini basitleştir, verimliliği artır!** projesinin bir parçasıdır. Proje hakkında detaylı bilgi için [`docs/Project-Definition.md`](docs/Project-Definition.md) dosyasına bakın.
 
 ## 📖 Hakkında
 
 <!-- Bu repository'nin ne yaptığını buraya yazın -->
-Open Team Manager, topluluk projelerini, görevleri ve ekip üyelerini takip etmek için tasarlanmış açık kaynaklı bir proje yönetim sistemidir. Koordinatörler proje açar, üyeler görev alır, ilerleme otomatik takip edilir. Tamamen topluluk tarafından, topluluk için inşa ediliyor.
 
-Temel Özellikler
-
-- 🗂️ Proje oluşturma, kategori bazlı ayırma ve görev yönetimi
-- 📋 Kanban ve Gantt panoları ile görselleştirilmiş ilerleme
-- 👥 Ekip üyesi yönetimi, rol ve izin kontrolü
-- 📊 Otomatik ilerleme raporları ve aktivite logları
-- 🔍 Tarih ve öncelik bazlı filtreleme
-  
 ## 🚀 Kurulum
 
 ### Gereksinimler
 
-- Frontend:       Next.js 16, TypeScript, Tailwind CSS, shadcn/ui
-- BackendPython:  3.12, FastAPI, SQLAlchemy
-- Veritabanı:     PostgreSQL 16, Redis 7
-- Altyapı:        Docker, GitHub Actions
+- Gerekli araçları buraya listeleyin
 
 ### Başlangıç
 
@@ -50,185 +34,34 @@ Temel Özellikler
 git clone https://github.com/Bilgisayar-Kavramlari-Toplulugu/project-openteammanager-backend.git
 cd project-openteammanager-backend
 
-# Ortam Değişkenlerini Ayarla
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env.local
-
-# Docker ile Başlat
-docker compose up --build
-docker compose exec backend alembic upgrade head
-
-# Tamamlanınca servislerin durumunu kontrol et
-docker compose ps
-
-# örnek çıktı:
-backend    running   :8000
-frontend   running   :3000
-db         running   :5432
-
-# Veritabanını Hazırla - migration çalıştır (kod içindeki tablo tanımlarını okuyup veritabanına uygular)
-docker compose exec backend alembic upgrade head
-
-# Çalıştığını Doğrula
-# frontend : http://localhost:3000
-# backend : http://localhost:8000
-# API endpoint'leri : http://localhost:8000/docs
-
+# Kurulum adımlarını buraya ekleyin
 ```
 
 ## 💻 Kullanım
 
 ```bash
-# Uygulamayı çalıştırmak için tüm servisleri başlat
-docker compose up -d
-
-##### Her çalışma oturumunda servisleri başlatman yeterli
-
-docker compose up       # Tüm servisleri başlatır
-docker compose up -d    # Arka planda başlatır, terminal serbest kalır.
-docker compose down     # Bitince durdur - tüm servisleri durdurur ve container'ları siler
-docker compose logs -f backend    # backend loglarını canlı izle
-docker compose logs -f frontend   # frontend loglarını canlı izle
-
+# Uygulamayı çalıştırma komutunu buraya ekleyin
 ```
 
 ## 📁 Proje Yapısı
 
 ```
-Monorepo Yapısı:
-
-open-team-manager/
-├── frontend/
-├── backend/
-│   └── app/
-├── docker-compose.yml      # Tüm stack buradan yönetilir
-├── .env.example
-└── README.md
-
-------------------------------------
-Backend Repo Yapısı:
-
-open-team-manager-backend/
-├── app/
-│   ├── main.py                  # FastAPI uygulama girişi
-│   ├── config.py                # Pydantic Settings
-│   ├── database.py              # Async SQLAlchemy engine
-│   ├── dependencies.py          # get_db, get_current_user
-│   ├── models/                  # SQLAlchemy ORM modelleri
-│   │   ├── user.py
-│   │   ├── project.py
-│   │   └── task.py
-│   ├── schemas/                 # Pydantic request/response
-│   │   ├── user.py
-│   │   └── project.py
-│   ├── routers/                 # API endpoint grupları
-│   │   ├── auth.py
-│   │   ├── projects.py
-│   │   ├── tasks.py
-│   │   ├── members.py
-│   │   └── reports.py
-│   ├── services/                # İş mantığı
-│   │   ├── auth_service.py
-│   │   ├── task_service.py
-│   │   └── report_service.py
-│   ├── core/
-│   │   ├── security.py          # JWT, bcrypt
-│   │   ├── permissions.py       # Yetki kontrolü
-│   │   └── websocket.py         # WS bağlantı yönetimi
-│   └── workers/
-│       ├── celery_app.py
-│       └── tasks.py             # Arka plan görevleri
-├── migrations/                  # Alembic
-├── tests/
-├── .env.example                 # docker-compose buraya taşındı
-├── requirements.txt
-└── README.md
-
-```
-## Teknik Mimari
-
-```bash
-Kullanıcı (Tarayıcı)
-        │
-        │ HTTP
-        ▼
-┌─────────────────────────┐
-│     Next.js 15          │
-│     Frontend            │
-│     localhost:3000      │
-└───────────┬─────────────┘
-            │ REST API
-            ▼
-┌─────────────────────────┐
-│     FastAPI             │
-│     Backend             │
-│     localhost:8000      │
-└──────┬──────────┬───────┘
-       │          │
-       ▼          ▼
-┌──────────┐  ┌──────────┐
-│PostgreSQL│  │  Redis   │
-│  :5432   │  │  :6379   │
-└──────────┘  └────┬─────┘
-                   │
-                   ▼
-            ┌──────────────┐
-            │    Celery    │
-            │    Worker    │
-            └──────────────┘
-
+project-openteammanager-backend/
+├── src/          # Kaynak kodlar
+├── tests/        # Testler
+├── docs/         # Dokümantasyon
+└── README.md     # Bu dosya
 ```
 
 ## 🧪 Test
 
 ```bash
-# Testleri çalıştır
-docker compose exec backend pytest
-
-# Tek dosya
-docker compose exec backend pytest tests/test_tasks.py
-
-# Tek test
-docker compose exec backend pytest tests/test_tasks.py::test_create_task
-
-# Coverage raporu
-docker compose exec backend pytest --cov=app --cov-report=term-missing
-
-# Frontend
-docker compose exec frontend npm run test
-docker compose exec frontend npm run test -- --watch
-
-# Backend
-docker compose exec backend ruff check .
-docker compose exec backend ruff check --fix .   # otomatik düzelt
-docker compose exec backend ruff format .        # biçimlendir
-
-# Frontend
-docker compose exec frontend npm run lint
-docker compose exec frontend npm run lint -- --fix
-docker compose exec frontend npm run type-check
+# Test komutlarını buraya ekleyin
 ```
-
-## Branch Stratejisi
-
-| Branch | Amaç |
-|--------|------|
-| `main` | Production — her zaman kararlı |
-| `develop` | Aktif geliştirme — PR'lar buraya açılır |
-| `feature/otm-<no>-<açıklama>` | Yeni özellik |
-| `fix/otm-<no>-<açıklama>` | Hata düzeltme |
-| `hotfix/otm-<no>-<açıklama>` | Acil production düzeltmesi |
-| `chore/<açıklama>` | Bağımlılık, config güncellemesi |
-
-**Kurallar:** `main` ve `develop`'a doğrudan push yapılamaz. Her değişiklik `feature/*` veya `fix/*` branch'inden PR ile gelir, en az 1 onay gerekir.
 
 ## 🤝 Katkıda Bulunma
 
-Her seviyeden katkı memnuniyetle karşılanır
-  — kod, dokümantasyon, hata raporu, tasarım önerisi.
-
 Katkıda bulunmak için lütfen [`CONTRIBUTING.md`](.github/CONTRIBUTING.md) dosyasını inceleyin.
-
 
 ## 📚 Dokümantasyon
 
