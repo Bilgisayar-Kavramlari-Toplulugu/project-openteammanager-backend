@@ -76,3 +76,15 @@ async def org(auth_client: AsyncClient):
         "description": "Test organizasyonu"
     })
     return response.json()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def project(auth_client: AsyncClient, org: dict):
+    """Test için hazır bir proje döner."""
+    response = await auth_client.post(f"/api/v1/organizations/{org['id']}/projects", json={
+        "name": "Test Project",
+        "key": "TST",
+        "description": "Test projesi",
+        "visibility": "private"
+    })
+    return response.json()
