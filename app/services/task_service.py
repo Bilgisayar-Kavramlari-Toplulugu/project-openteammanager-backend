@@ -76,7 +76,7 @@ async def get_tasks(
     if assignee_id:
         query = query.where(Task.assignee_id == assignee_id)
     if label:
-        query = query.where(Task.labels.contains([label]))
+        query = query.where(Task.labels.any(label))
 
     query = query.order_by(Task.status, Task.position)
     result = await db.execute(query)
