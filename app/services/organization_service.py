@@ -123,6 +123,26 @@ async def invite_member(db: AsyncSession, org_id: uuid.UUID, data: MemberInvite,
     return member
 
 
+async def remove_member(db: AsyncSession, org_id: uuid.UUID, user_id: uuid.UUID, user: User):
+    await _get_org_or_404(db, org_id)
+    await _require_role(db, org_id, user.id, ["owner", "admin"])
+
+    result = await db.execute(
+        select(OrganizationMember).where(
+            OrganizationMember.organization_id == org_id,
+            OrganizationMember.user_id == user_id,
+        )
+    )
+    member = result.scalar_one_or_none()
+    if not member:
+        raise HTTPException(status_code=404, detail="Üye bulunamadı")
+    if member.role == "owner":
+        raise HTTPException(status_code=400, detail="Owner kaldırılamaz")
+
+    member.status = "removed"
+    await db.commit()
+
+
 # --- Yardımcı fonksiyonlar ---
 
 async def _get_org_or_404(db: AsyncSession, org_id: uuid.UUID) -> Organization:

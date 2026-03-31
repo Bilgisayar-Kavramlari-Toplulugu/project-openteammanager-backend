@@ -8,7 +8,7 @@ from app.models.user import User
 from app.schemas.project import ProjectCreate, ProjectUpdate, ProjectMemberInvite
 import uuid
 from datetime import datetime, timezone
-
+from sqlalchemy import and_, or_
 
 async def create_project(db: AsyncSession, org_id: uuid.UUID, data: ProjectCreate, user: User) -> Project:
     await _require_org_member(db, org_id, user.id)
@@ -23,6 +23,7 @@ async def create_project(db: AsyncSession, org_id: uuid.UUID, data: ProjectCreat
         category=data.category,
         color=data.color,
         icon=data.icon,
+        stack=data.stack,
         start_date=data.start_date,
         end_date=data.end_date,
         created_by=user.id,
@@ -39,26 +40,54 @@ async def create_project(db: AsyncSession, org_id: uuid.UUID, data: ProjectCreat
     db.add(member)
     await db.commit()
     await db.refresh(project)
+    project.is_member = True
     return project
+
+
+# async def get_projects(db: AsyncSession, org_id: uuid.UUID, user: User) -> list[Project]:
+#     await _require_org_member(db, org_id, user.id)
+#     result = await db.execute(
+#         select(Project)
+#         .join(ProjectMember, ProjectMember.project_id == Project.id)
+#         .where(
+#             Project.organization_id == org_id,
+#             ProjectMember.user_id == user.id,
+#             Project.deleted_at.is_(None),
+#         )
+#     )
+#     return result.scalars().all()
 
 
 async def get_projects(db: AsyncSession, org_id: uuid.UUID, user: User) -> list[Project]:
     await _require_org_member(db, org_id, user.id)
     result = await db.execute(
-        select(Project)
-        .join(ProjectMember, ProjectMember.project_id == Project.id)
+        select(Project, ProjectMember)
+        .outerjoin(ProjectMember,
+                   (ProjectMember.project_id == Project.id) &
+                   (ProjectMember.user_id == user.id)
+        )
         .where(
             Project.organization_id == org_id,
-            ProjectMember.user_id == user.id,
             Project.deleted_at.is_(None),
+            or_(Project.visibility.in_(["public", "internal"]),
+                ProjectMember.user_id == user.id,
+            )
         )
     )
-    return result.scalars().all()
+    rows = result.all()
+    projects = []
+    for project, member in rows:
+        project.is_member = member is not None
+        projects.append(project)
+
+
+    return projects
 
 
 async def get_project(db: AsyncSession, org_id: uuid.UUID, project_id: uuid.UUID, user: User) -> Project:
     project = await _get_project_or_404(db, org_id, project_id)
     await _require_project_member(db, project_id, user.id)
+    project.is_member = True
     return project
 
 
@@ -71,6 +100,7 @@ async def update_project(db: AsyncSession, org_id: uuid.UUID, project_id: uuid.U
 
     await db.commit()
     await db.refresh(project)
+    project.is_member = True
     return project
 
 

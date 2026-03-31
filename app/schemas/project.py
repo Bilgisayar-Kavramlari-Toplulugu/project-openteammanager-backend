@@ -12,6 +12,7 @@ class ProjectCreate(BaseModel):
     category: str | None = None
     color: str = "#4F46E5"
     icon: str | None = None
+    stack: list[str] = []
     start_date: date | None = None
     end_date: date | None = None
 
@@ -45,6 +46,7 @@ class ProjectUpdate(BaseModel):
     category: str | None = None
     color: str | None = None
     icon: str | None = None
+    stack: list[str] = []
     start_date: date | None = None
     end_date: date | None = None
 
@@ -67,6 +69,8 @@ class ProjectResponse(BaseModel):
     category: str | None
     color: str
     icon: str | None
+    stack: list[str] = []
+    is_member: bool = False
     start_date: date | None
     end_date: date | None
     created_by: uuid.UUID
