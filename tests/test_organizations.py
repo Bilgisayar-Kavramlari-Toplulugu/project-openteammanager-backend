@@ -314,3 +314,78 @@ async def test_list_members_success(auth_client, org):
     data = response.json()
     assert len(data) >= 1
     assert any(m["role"] == "owner" for m in data)
+
+@pytest.mark.asyncio
+async def test_remove_member_success(auth_client, client, org):
+    """Owner org üyesini kaldırabilmeli."""
+    await client.post("/api/v1/auth/register", json={
+        "email": "tobe_removed@example.com",
+        "username": "toberemoved",
+        "full_name": "To Be Removed",
+        "password": "Test1234!"
+    })
+    login = await client.post("/api/v1/auth/login", json={
+        "email": "tobe_removed@example.com",
+        "password": "Test1234!"
+    })
+    user_id = (await client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {login.json()['access_token']}"}
+    )).json()["id"]
+
+    await auth_client.post(f"/api/v1/organizations/{org['id']}/members", json={
+        "user_id": user_id,
+        "role": "member"
+    })
+
+    response = await auth_client.delete(
+        f"/api/v1/organizations/{org['id']}/members/{user_id}"
+    )
+    assert response.status_code == 204
+
+    members = (await auth_client.get(
+        f"/api/v1/organizations/{org['id']}/members"
+    )).json()
+    assert not any(m["user_id"] == user_id and m["status"] == "active" for m in members)
+
+
+@pytest.mark.asyncio
+async def test_remove_owner_forbidden(auth_client, org):
+    """Owner kendisi kaldırılamaz."""
+    me = (await auth_client.get("/api/v1/auth/me")).json()
+    response = await auth_client.delete(
+        f"/api/v1/organizations/{org['id']}/members/{me['id']}"
+    )
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_remove_member_forbidden_for_viewer(auth_client, client, org):
+    """Viewer üye kaldıramaz."""
+    await client.post("/api/v1/auth/register", json={
+        "email": "viewer3@example.com",
+        "username": "viewer3",
+        "full_name": "Viewer 3",
+        "password": "Test1234!"
+    })
+    login = await client.post("/api/v1/auth/login", json={
+        "email": "viewer3@example.com",
+        "password": "Test1234!"
+    })
+    viewer_token = login.json()["access_token"]
+    viewer_id = (await client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {viewer_token}"}
+    )).json()["id"]
+
+    await auth_client.post(f"/api/v1/organizations/{org['id']}/members", json={
+        "user_id": viewer_id,
+        "role": "viewer"
+    })
+
+    me = (await auth_client.get("/api/v1/auth/me")).json()
+    response = await client.delete(
+        f"/api/v1/organizations/{org['id']}/members/{me['id']}",
+        headers={"Authorization": f"Bearer {viewer_token}"}
+    )
+    assert response.status_code == 403

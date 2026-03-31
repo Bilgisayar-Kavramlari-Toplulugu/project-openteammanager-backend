@@ -67,3 +67,13 @@ async def invite_member(
     db: AsyncSession = Depends(get_db),
 ):
     return await organization_service.invite_member(db, org_id, data, current_user)
+
+
+@router.delete("/{org_id}/members/{user_id}", status_code=204)
+async def remove_member(
+    org_id: uuid.UUID,
+    user_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    await organization_service.remove_member(db, org_id, user_id, current_user)

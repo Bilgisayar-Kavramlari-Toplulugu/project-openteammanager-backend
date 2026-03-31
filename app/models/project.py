@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, date
-from sqlalchemy import String, Text, ForeignKey, DateTime, Date
+from sqlalchemy import String, Text, ForeignKey, DateTime, Date, ARRAY
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
@@ -19,6 +19,7 @@ class Project(Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     key: Mapped[str] = mapped_column(String(10), nullable=False)
     status: Mapped[str] = mapped_column(String(50), default="active")
+    stack: Mapped[list] = mapped_column(ARRAY(String), default=list)
     visibility: Mapped[str] = mapped_column(String(20), default="private")
     category: Mapped[str | None] = mapped_column(String(100), nullable=True)
     color: Mapped[str] = mapped_column(String(7), default="#4F46E5")
