@@ -26,6 +26,7 @@ go.work.sum
 
 # env file
 .env
+.env.age
 
 # Editor/IDE
 # .idea/
@@ -36,4 +37,4 @@ otm-env/
 __pycache__/
 *.pyc
 .idea/
-
+ycopg2 .

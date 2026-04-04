@@ -63,18 +63,62 @@ async def test_create_project_non_org_member_forbidden(auth_client, client, org)
 
 # --- Proje Listeleme ---
 
+# @pytest.mark.asyncio
+# async def test_list_projects(auth_client, org, project):
+#     response = await auth_client.get(f"/api/v1/organizations/{org['id']}/projects")
+#     assert response.status_code == 200
+#     data = response.json()
+#     assert len(data) >= 1
+#     assert any(p["key"] == "TST" for p in data)
+
 @pytest.mark.asyncio
 async def test_list_projects(auth_client, org, project):
     response = await auth_client.get(f"/api/v1/organizations/{org['id']}/projects")
     assert response.status_code == 200
     data = response.json()
     assert len(data) >= 1
-    assert any(p["key"] == "TST" for p in data)
+    tst_project = next((p for p in data if p["key"] == "TST"), None)
+    assert tst_project is not None
+    # Proje oluşturan kullanıcı otomatik manager atandığından is_member True olmalı
+    assert tst_project["is_member"] is True
+
+
+# eski hali
+# @pytest.mark.asyncio
+# async def test_list_projects_only_member(auth_client, client, org, project):
+#     """Kullanıcı yalnızca üyesi olduğu projeleri görür."""
+#     await client.post("/api/v1/auth/register", json={
+#         "email": "member@example.com",
+#         "username": "memberuser",
+#         "full_name": "Member",
+#         "password": "Test1234!"
+#     })
+#     login = await client.post("/api/v1/auth/login", json={
+#         "email": "member@example.com",
+#         "password": "Test1234!"
+#     })
+#     member_token = login.json()["access_token"]
+#     member_id = (await client.get(
+#         "/api/v1/auth/me",
+#         headers={"Authorization": f"Bearer {member_token}"}
+#     )).json()["id"]
+#
+#     await auth_client.post(f"/api/v1/organizations/{org['id']}/members", json={
+#         "user_id": member_id,
+#         "role": "member"
+#     })
+#
+#     response = await client.get(
+#         f"/api/v1/organizations/{org['id']}/projects",
+#         headers={"Authorization": f"Bearer {member_token}"}
+#     )
+#     assert response.status_code == 200
+#     assert not any(p["key"] == "TST" for p in response.json())
 
 
 @pytest.mark.asyncio
-async def test_list_projects_only_member(auth_client, client, org, project):
-    """Kullanıcı yalnızca üyesi olduğu projeleri görür."""
+async def test_list_projects_shows_all_org_projects_with_membership_flag(auth_client, client, org, project):
+    """Org üyesi tüm projeleri görür; üye olmadığı projelerde is_member False döner."""
     await client.post("/api/v1/auth/register", json={
         "email": "member@example.com",
         "username": "memberuser",
@@ -101,8 +145,11 @@ async def test_list_projects_only_member(auth_client, client, org, project):
         headers={"Authorization": f"Bearer {member_token}"}
     )
     assert response.status_code == 200
-    assert not any(p["key"] == "TST" for p in response.json())
-
+    data = response.json()
+    # Projeyi görüyor ama is_member False
+    tst_project = next((p for p in data if p["key"] == "TST"), None)
+    assert tst_project is not None  # proje görünüyor
+    assert tst_project["is_member"] is False # ama üye değil
 
 # --- Proje Detay ---
 
@@ -340,3 +387,64 @@ async def test_list_project_members(auth_client, org, project):
     data = response.json()
     assert len(data) >= 1
     assert any(m["role"] == "manager" for m in data)
+
+
+@pytest.mark.asyncio
+async def test_list_projects_private_not_visible_to_non_member(auth_client, client, org):
+    """Private proje, üyesi olmayan org kullanıcısına görünmemeli."""
+    await auth_client.post(f"/api/v1/organizations/{org['id']}/projects", json={
+        "name": "Private Project",
+        "key": "PRV",
+        "visibility": "private"
+    })
+
+    await client.post("/api/v1/auth/register", json={
+        "email": "orgmember@example.com",
+        "username": "orgmember",
+        "full_name": "Org Member",
+        "password": "Test1234!"
+    })
+    login = await client.post("/api/v1/auth/login", json={
+        "email": "orgmember@example.com",
+        "password": "Test1234!"
+    })
+    member_token = login.json()["access_token"]
+    member_id = (await client.get(
+        "/api/v1/auth/me",
+        headers={"Authorization": f"Bearer {member_token}"}
+    )).json()["id"]
+
+    await auth_client.post(f"/api/v1/organizations/{org['id']}/members", json={
+        "user_id": member_id,
+        "role": "member"
+    })
+
+    response = await client.get(
+        f"/api/v1/organizations/{org['id']}/projects",
+        headers={"Authorization": f"Bearer {member_token}"}
+    )
+    assert response.status_code == 200
+    assert not any(p["key"] == "PRV" for p in response.json())
+
+
+@pytest.mark.asyncio
+async def test_create_project_with_stack(auth_client, org):
+    """Stack alanı proje oluşturulurken set edilebilmeli."""
+    response = await auth_client.post(f"/api/v1/organizations/{org['id']}/projects", json={
+        "name": "Stack Project",
+        "key": "STK",
+        "stack": ["Python", "FastAPI", "PostgreSQL"]
+    })
+    assert response.status_code == 201
+    assert response.json()["stack"] == ["Python", "FastAPI", "PostgreSQL"]
+
+
+@pytest.mark.asyncio
+async def test_update_project_stack(auth_client, org, project):
+    """Stack alanı güncellenebilmeli."""
+    response = await auth_client.patch(
+        f"/api/v1/organizations/{org['id']}/projects/{project['id']}",
+        json={"stack": ["Next.js", "TypeScript"]}
+    )
+    assert response.status_code == 200
+    assert response.json()["stack"] == ["Next.js", "TypeScript"]
