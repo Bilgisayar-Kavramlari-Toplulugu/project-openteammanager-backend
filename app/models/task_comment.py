@@ -21,7 +21,7 @@ class TaskComment(Base):
     parent_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("task_comments.id"), nullable=True
     )
-    content: Mapped[str] = mapped_column(Text, nullable=False)
+    content: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_edited: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.utcnow

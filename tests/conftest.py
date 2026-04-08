@@ -103,3 +103,13 @@ async def task(auth_client: AsyncClient, org: dict, project: dict):
         }
     )
     return response.json()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def comment(auth_client, org, project, task):
+    """Test için hazır bir yorum döner."""
+    response = await auth_client.post(
+        f"/api/v1/organizations/{org['id']}/projects/{project['id']}/tasks/{task['id']}/comments",
+        json={"content": "Test yorumu"}
+    )
+    return response.json()
