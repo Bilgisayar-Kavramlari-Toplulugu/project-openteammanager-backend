@@ -103,6 +103,3 @@ class RateLimiterMiddleware(BaseHTTPMiddleware):
             )
 
         return await call_next(request)
-
-
-

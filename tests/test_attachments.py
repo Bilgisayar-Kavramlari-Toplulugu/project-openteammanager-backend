@@ -1,7 +1,6 @@
 import io
 import pytest
 import pytest_asyncio
-from unittest.mock import patch, MagicMock
 
 
 # ── Mock storage — gerçek MinIO olmadan test ─────────────────────────────────

@@ -5,7 +5,6 @@ from app.schemas.auth import RegisterRequest, LoginRequest, TokenResponse, UserR
 from app.services.auth_service import register_user, login_user
 from app.core.security import decode_token, create_access_token
 from app.models.user import User
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.dependencies import get_db, get_current_user
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
@@ -29,8 +28,8 @@ async def login(data: LoginRequest, response: Response, db: AsyncSession = Depen
         samesite="lax",
         max_age=60 * 60 * 24 * 30
     )
-
     return TokenResponse(access_token=result["access_token"])
+
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh(request: Request, response: Response):

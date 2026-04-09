@@ -63,14 +63,6 @@ async def test_create_project_non_org_member_forbidden(auth_client, client, org)
 
 # --- Proje Listeleme ---
 
-# @pytest.mark.asyncio
-# async def test_list_projects(auth_client, org, project):
-#     response = await auth_client.get(f"/api/v1/organizations/{org['id']}/projects")
-#     assert response.status_code == 200
-#     data = response.json()
-#     assert len(data) >= 1
-#     assert any(p["key"] == "TST" for p in data)
-
 @pytest.mark.asyncio
 async def test_list_projects(auth_client, org, project):
     response = await auth_client.get(f"/api/v1/organizations/{org['id']}/projects")
@@ -81,39 +73,6 @@ async def test_list_projects(auth_client, org, project):
     assert tst_project is not None
     # Proje oluşturan kullanıcı otomatik manager atandığından is_member True olmalı
     assert tst_project["is_member"] is True
-
-
-# eski hali
-# @pytest.mark.asyncio
-# async def test_list_projects_only_member(auth_client, client, org, project):
-#     """Kullanıcı yalnızca üyesi olduğu projeleri görür."""
-#     await client.post("/api/v1/auth/register", json={
-#         "email": "member@example.com",
-#         "username": "memberuser",
-#         "full_name": "Member",
-#         "password": "Test1234!"
-#     })
-#     login = await client.post("/api/v1/auth/login", json={
-#         "email": "member@example.com",
-#         "password": "Test1234!"
-#     })
-#     member_token = login.json()["access_token"]
-#     member_id = (await client.get(
-#         "/api/v1/auth/me",
-#         headers={"Authorization": f"Bearer {member_token}"}
-#     )).json()["id"]
-#
-#     await auth_client.post(f"/api/v1/organizations/{org['id']}/members", json={
-#         "user_id": member_id,
-#         "role": "member"
-#     })
-#
-#     response = await client.get(
-#         f"/api/v1/organizations/{org['id']}/projects",
-#         headers={"Authorization": f"Bearer {member_token}"}
-#     )
-#     assert response.status_code == 200
-#     assert not any(p["key"] == "TST" for p in response.json())
 
 
 @pytest.mark.asyncio
@@ -322,7 +281,7 @@ async def test_add_project_member_success(auth_client, client, org, project):
 
 @pytest.mark.asyncio
 async def test_add_project_member_duplicate(auth_client, client, org, project):
-    """Aynı kullanıcıyı iki kez eklemek 400 döndürmeli."""
+    """Aynı kullanıcı iki kez eklenemez -> 400 döndürmeli."""
     await client.post("/api/v1/auth/register", json={
         "email": "dup@example.com",
         "username": "dupuser",

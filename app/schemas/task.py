@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime, date
 from pydantic import BaseModel
-from typing import Optional
 
 
 class TaskCreate(BaseModel):

@@ -19,11 +19,8 @@ async def upload_attachment(
     file: UploadFile = File(...),
     task_id: uuid.UUID | None = Query(default=None),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    return await attachment_service.upload_attachment(
-        db, org_id, project_id, task_id, file, current_user.id
-    )
+    db: AsyncSession = Depends(get_db)):
+    return await attachment_service.upload_attachment(db, org_id, project_id, task_id, file, current_user.id)
 
 
 @router.get("/attachments", response_model=list[AttachmentResponse])
@@ -32,11 +29,8 @@ async def list_attachments(
     project_id: uuid.UUID,
     task_id: uuid.UUID | None = Query(default=None),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    return await attachment_service.list_attachments(
-        db, project_id, task_id, current_user.id
-    )
+    db: AsyncSession = Depends(get_db)):
+    return await attachment_service.list_attachments(db, project_id, task_id, current_user.id)
 
 
 @router.get("/tasks/{task_id}/attachments", response_model=list[AttachmentResponse])
@@ -45,11 +39,8 @@ async def list_task_attachments(
     project_id: uuid.UUID,
     task_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    return await attachment_service.list_task_attachments(
-        db, project_id, task_id, current_user.id
-    )
+    db: AsyncSession = Depends(get_db)):
+    return await attachment_service.list_task_attachments(db, project_id, task_id, current_user.id)
 
 
 @router.delete("/attachments/{attachment_id}", status_code=204)
@@ -58,8 +49,5 @@ async def delete_attachment(
     project_id: uuid.UUID,
     attachment_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    await attachment_service.delete_attachment(
-        db, org_id, project_id, attachment_id, current_user.id
-    )
+    db: AsyncSession = Depends(get_db)):
+    await attachment_service.delete_attachment(db, org_id, project_id, attachment_id, current_user.id)

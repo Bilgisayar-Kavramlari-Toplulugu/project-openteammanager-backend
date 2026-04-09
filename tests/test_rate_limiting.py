@@ -10,7 +10,7 @@ from app.main import app
 
 @pytest.fixture(autouse=True)
 def reset_rate_limiter():
-    """Reset rate limiter before each test."""
+    """Her testten önce rate limiter’ı sıfırla."""
     from app.middleware.rate_limiting import _instance
     if _instance is not None:
         _instance.storage._store.clear()

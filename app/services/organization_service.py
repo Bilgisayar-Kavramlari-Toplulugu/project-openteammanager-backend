@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 from app.models.organization import Organization
 from app.models.organization_members import OrganizationMember
 from app.models.user import User

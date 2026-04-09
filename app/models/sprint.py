@@ -1,9 +1,9 @@
 import uuid
-from datetime import datetime, date
+from datetime import datetime, date, UTC
 from sqlalchemy import String, Text, ForeignKey, DateTime, Date
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import UniqueConstraint, Numeric
+from sqlalchemy import Numeric
 from app.database import Base
 
 
@@ -23,7 +23,7 @@ class Sprint(Base):
     end_date: Mapped[date] = mapped_column(Date, nullable=False)
     capacity_hours: Mapped[float | None] = mapped_column(Numeric(8, 2), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default=datetime.now(UTC)
     )
     completed_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
@@ -40,5 +40,5 @@ class SprintTask(Base):
         UUID(as_uuid=True), ForeignKey("tasks.id"), primary_key=True
     )
     added_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=datetime.utcnow
+        DateTime(timezone=True), default=datetime.now(UTC)
     )

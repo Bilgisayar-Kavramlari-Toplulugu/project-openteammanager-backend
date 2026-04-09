@@ -17,8 +17,7 @@ async def list_tasks(
     assignee_id: uuid.UUID | None = Query(default=None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
-    label: str | None = Query(default=None)
-):
+    label: str | None = Query(default=None)):
     return await task_service.get_tasks(db, project_id, current_user.id, status, assignee_id, label)
 
 
@@ -28,8 +27,7 @@ async def create_task(
     project_id: uuid.UUID,
     data: TaskCreate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     return await task_service.create_task(db, org_id, project_id, data, current_user.id)
 
 
@@ -39,8 +37,7 @@ async def get_task(
     project_id: uuid.UUID,
     task_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     return await task_service.get_task(db, project_id, task_id, current_user.id)
 
 
@@ -51,8 +48,7 @@ async def update_task(
     task_id: uuid.UUID,
     data: TaskUpdate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     return await task_service.update_task(db, project_id, task_id, data, current_user.id)
 
 
@@ -63,8 +59,7 @@ async def move_task(
     task_id: uuid.UUID,
     data: TaskMoveRequest,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     return await task_service.move_task(db, project_id, task_id, data, current_user.id)
 
 
@@ -74,6 +69,5 @@ async def delete_task(
     project_id: uuid.UUID,
     task_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     await task_service.delete_task(db, project_id, task_id, current_user.id)
