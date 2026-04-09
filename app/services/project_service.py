@@ -44,20 +44,6 @@ async def create_project(db: AsyncSession, org_id: uuid.UUID, data: ProjectCreat
     return project
 
 
-# async def get_projects(db: AsyncSession, org_id: uuid.UUID, user: User) -> list[Project]:
-#     await _require_org_member(db, org_id, user.id)
-#     result = await db.execute(
-#         select(Project)
-#         .join(ProjectMember, ProjectMember.project_id == Project.id)
-#         .where(
-#             Project.organization_id == org_id,
-#             ProjectMember.user_id == user.id,
-#             Project.deleted_at.is_(None),
-#         )
-#     )
-#     return result.scalars().all()
-
-
 async def get_projects(db: AsyncSession, org_id: uuid.UUID, user: User) -> list[Project]:
     await _require_org_member(db, org_id, user.id)
     result = await db.execute(
@@ -79,7 +65,6 @@ async def get_projects(db: AsyncSession, org_id: uuid.UUID, user: User) -> list[
     for project, member in rows:
         project.is_member = member is not None
         projects.append(project)
-
 
     return projects
 

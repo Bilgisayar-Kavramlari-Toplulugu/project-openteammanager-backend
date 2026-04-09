@@ -31,7 +31,7 @@ class CommentResponse(BaseModel):
     task_id: uuid.UUID
     user_id: uuid.UUID
     parent_id: uuid.UUID | None
-    content: str | None       # silinmişse None
+    content: str | None
     is_deleted: bool
     is_edited: bool
     created_at: datetime

@@ -19,8 +19,7 @@ async def create_comment(
     task_id: uuid.UUID,
     data: CommentCreate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     return await task_comments_service.create_comment(db, org_id, project_id, task_id, data, current_user.id)
 
 
@@ -32,8 +31,7 @@ async def list_comments(
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=20, ge=1, le=100),
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     return await task_comments_service.list_comments(db, project_id, task_id, current_user.id, page, limit)
 
 
@@ -44,8 +42,7 @@ async def update_comment(
     comment_id: uuid.UUID,
     data: CommentUpdate,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     return await task_comments_service.update_comment(db, org_id, project_id, comment_id, data, current_user.id)
 
 
@@ -55,6 +52,5 @@ async def delete_comment(
     project_id: uuid.UUID,
     comment_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     await task_comments_service.delete_comment(db, org_id, project_id, comment_id, current_user.id)

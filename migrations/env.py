@@ -4,8 +4,6 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from alembic import context
 from app.config import settings
 from app.database import Base
-from app.models import (User, Organization, OrganizationMember, Project, ProjectMember, Task, TaskComment,
-                        Attachment, Sprint, SprintTask, ActivityLog, Notification)
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)

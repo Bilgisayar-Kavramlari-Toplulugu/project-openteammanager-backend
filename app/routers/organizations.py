@@ -11,8 +11,7 @@ router = APIRouter(prefix="/api/v1/organizations", tags=["organizations"])
 @router.get("", response_model=list[OrganizationResponse])
 async def list_organizations(
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     return await organization_service.get_organizations(db, current_user)
 
 
@@ -45,8 +44,7 @@ async def update_organization(
 async def delete_organization(
     org_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     await organization_service.delete_organization(db, org_id, current_user)
 
 
@@ -54,8 +52,7 @@ async def delete_organization(
 async def list_members(
     org_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     return await organization_service.get_members(db, org_id, current_user)
 
 
@@ -64,8 +61,7 @@ async def invite_member(
     org_id: uuid.UUID,
     data: MemberInvite,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     return await organization_service.invite_member(db, org_id, data, current_user)
 
 
@@ -74,6 +70,5 @@ async def remove_member(
     org_id: uuid.UUID,
     user_id: uuid.UUID,
     current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
+    db: AsyncSession = Depends(get_db)):
     await organization_service.remove_member(db, org_id, user_id, current_user)

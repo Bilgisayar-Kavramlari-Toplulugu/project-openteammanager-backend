@@ -1,18 +1,15 @@
 import uuid
 from datetime import datetime, timezone
-
 from fastapi import HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.models.attachment import Attachment
-from app.models.task import Task
-from app.models.project_member import ProjectMember
-from app.models.activity_log import ActivityLog
 from app.schemas.attachment import AttachmentResponse
 from app.services import storage_service
+from app.services.helpers import require_project_member, is_project_manager, get_task_or_404, log_activity
 
-# ── Dosya validasyon sabitleri ────────────────────────────────────────────────
+
+# ── Dosya validasyon sabitleri ──
 
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 
@@ -38,21 +35,12 @@ ALLOWED_EXTENSIONS = {
 }
 
 
-# ── Public service fonksiyonları ──────────────────────────────────────────────
-
-async def upload_attachment(
-    db: AsyncSession,
-    org_id: uuid.UUID,
-    project_id: uuid.UUID,
-    task_id: uuid.UUID | None,
-    file: UploadFile,
-    user_id: uuid.UUID,
-) -> AttachmentResponse:
-    await _require_project_member(db, project_id, user_id)
+async def upload_attachment(db: AsyncSession, org_id: uuid.UUID, project_id: uuid.UUID, task_id: uuid.UUID | None, file: UploadFile, user_id: uuid.UUID) -> AttachmentResponse:
+    await require_project_member(db, project_id, user_id)
 
     # task_id verilmişse görev bu projeye ait mi kontrol et
     if task_id:
-        await _get_task_or_404(db, project_id, task_id)
+        await get_task_or_404(db, project_id, task_id)
 
     # Aynı isimli dosya var mı kontrol et
     existing = await db.execute(
@@ -94,14 +82,15 @@ async def upload_attachment(
     )
     db.add(attachment)
 
-    await _log_activity(
+    await log_activity(
         db,
         org_id=org_id,
         project_id=project_id,
         task_id=task_id,
         actor_id=user_id,
         action="attachment_uploaded",
-        entity_id=file_id,
+        entity_type="attachment",
+        entity_id=file_id
     )
 
     await db.commit()
@@ -109,13 +98,8 @@ async def upload_attachment(
     return _serialize(attachment)
 
 
-async def list_attachments(
-    db: AsyncSession,
-    project_id: uuid.UUID,
-    task_id: uuid.UUID | None,
-    user_id: uuid.UUID,
-) -> list[AttachmentResponse]:
-    await _require_project_member(db, project_id, user_id)
+async def list_attachments(db: AsyncSession, project_id: uuid.UUID, task_id: uuid.UUID | None, user_id: uuid.UUID) -> list[AttachmentResponse]:
+    await require_project_member(db, project_id, user_id)
 
     query = select(Attachment).where(
         Attachment.project_id == project_id,
@@ -129,14 +113,9 @@ async def list_attachments(
     return [_serialize(a) for a in attachments]
 
 
-async def list_task_attachments(
-    db: AsyncSession,
-    project_id: uuid.UUID,
-    task_id: uuid.UUID,
-    user_id: uuid.UUID,
-) -> list[AttachmentResponse]:
-    await _require_project_member(db, project_id, user_id)
-    await _get_task_or_404(db, project_id, task_id)
+async def list_task_attachments(db: AsyncSession, project_id: uuid.UUID, task_id: uuid.UUID, user_id: uuid.UUID) -> list[AttachmentResponse]:
+    await require_project_member(db, project_id, user_id)
+    await get_task_or_404(db, project_id, task_id)
 
     result = await db.execute(
         select(Attachment).where(
@@ -149,18 +128,12 @@ async def list_task_attachments(
     return [_serialize(a) for a in attachments]
 
 
-async def delete_attachment(
-    db: AsyncSession,
-    org_id: uuid.UUID,
-    project_id: uuid.UUID,
-    attachment_id: uuid.UUID,
-    user_id: uuid.UUID,
-) -> None:
-    await _require_project_member(db, project_id, user_id)
+async def delete_attachment(db: AsyncSession, org_id: uuid.UUID, project_id: uuid.UUID, attachment_id: uuid.UUID, user_id: uuid.UUID) -> None:
+    await require_project_member(db, project_id, user_id)
     attachment = await _get_attachment_or_404(db, project_id, attachment_id)
 
     is_owner = attachment.uploaded_by == user_id
-    is_manager = await _is_project_manager(db, project_id, user_id)
+    is_manager = await is_project_manager(db, project_id, user_id)
 
     if not is_owner and not is_manager:
         raise HTTPException(status_code=403, detail="Bu dosyayı silme yetkiniz yok")
@@ -169,20 +142,21 @@ async def delete_attachment(
     storage_service.delete_file(attachment.storage_path)
     attachment.deleted_at = datetime.now(timezone.utc)
 
-    await _log_activity(
+    await log_activity(
         db,
         org_id=org_id,
         project_id=project_id,
         task_id=attachment.task_id,
         actor_id=user_id,
         action="attachment_deleted",
-        entity_id=attachment_id,
+        entity_type="attachment",
+        entity_id=attachment_id
     )
 
     await db.commit()
 
 
-# ── Yardımcı fonksiyonlar ─────────────────────────────────────────────────────
+# --- Yardımcı fonksiyonlar -----------------------------
 
 def _validate_file(filename: str, mime_type: str, file_size: int) -> None:
     """Boyut, uzantı ve MIME type kontrolü."""
@@ -206,20 +180,6 @@ def _validate_file(filename: str, mime_type: str, file_size: int) -> None:
         )
 
 
-async def _get_task_or_404(db: AsyncSession, project_id: uuid.UUID, task_id: uuid.UUID) -> Task:
-    result = await db.execute(
-        select(Task).where(
-            Task.id == task_id,
-            Task.project_id == project_id,
-            Task.deleted_at.is_(None),
-        )
-    )
-    task = result.scalar_one_or_none()
-    if not task:
-        raise HTTPException(status_code=404, detail="Görev bulunamadı")
-    return task
-
-
 async def _get_attachment_or_404(
     db: AsyncSession, project_id: uuid.UUID, attachment_id: uuid.UUID
 ) -> Attachment:
@@ -234,54 +194,6 @@ async def _get_attachment_or_404(
     if not attachment:
         raise HTTPException(status_code=404, detail="Dosya bulunamadı")
     return attachment
-
-
-async def _require_project_member(
-    db: AsyncSession, project_id: uuid.UUID, user_id: uuid.UUID
-) -> None:
-    result = await db.execute(
-        select(ProjectMember).where(
-            ProjectMember.project_id == project_id,
-            ProjectMember.user_id == user_id,
-        )
-    )
-    if not result.scalar_one_or_none():
-        raise HTTPException(status_code=403, detail="Bu projeye erişim yetkiniz yok")
-
-
-async def _is_project_manager(
-    db: AsyncSession, project_id: uuid.UUID, user_id: uuid.UUID
-) -> bool:
-    result = await db.execute(
-        select(ProjectMember).where(
-            ProjectMember.project_id == project_id,
-            ProjectMember.user_id == user_id,
-            ProjectMember.role.in_(["manager", "owner"]),
-        )
-    )
-    return result.scalar_one_or_none() is not None
-
-
-async def _log_activity(
-    db: AsyncSession,
-    *,
-    org_id: uuid.UUID,
-    project_id: uuid.UUID,
-    task_id: uuid.UUID | None,
-    actor_id: uuid.UUID,
-    action: str,
-    entity_id: uuid.UUID,
-) -> None:
-    log = ActivityLog(
-        organization_id=org_id,
-        project_id=project_id,
-        task_id=task_id,
-        actor_id=actor_id,
-        action=action,
-        entity_type="attachment",
-        entity_id=entity_id,
-    )
-    db.add(log)
 
 
 def _serialize(attachment: Attachment) -> AttachmentResponse:

@@ -1,6 +1,5 @@
 """
-Storage Service
-MinIO (local) veya AWS S3 (prod) ile konuşur.
+Storage Service: MinIO (local) veya AWS S3 (prod) ile konuşur.
 Hangi ortamda olduğunu .env'deki STORAGE_BACKEND belirler.
 """
 
@@ -9,7 +8,6 @@ import boto3
 from botocore.exceptions import ClientError
 from botocore.config import Config
 from fastapi import HTTPException
-
 from app.config import settings
 
 
@@ -41,13 +39,8 @@ def _ensure_bucket_exists(client) -> None:
         client.create_bucket(Bucket=settings.STORAGE_BUCKET)
 
 
-def upload_file(
-    file_content: bytes,
-    storage_path: str,
-    mime_type: str,
-) -> None:
-    """
-    Dosyayı storage'a yükler.
+def upload_file(file_content: bytes, storage_path: str, mime_type: str) -> None:
+    """Dosyayı storage'a yükler.
     storage_path örn: "organizations/abc/projects/xyz/dosya.pdf"
     """
     client = _get_client()
@@ -77,8 +70,7 @@ def delete_file(storage_path: str) -> None:
 
 
 def generate_presigned_url(storage_path: str, expires_in: int = 900) -> str:
-    """
-    15 dakika (900 saniye) geçerli presigned download URL üretir.
+    """15 dakika (900 saniye) geçerli presigned download URL üretir.
     expires_in: saniye cinsinden geçerlilik süresi
     """
     client = _get_client()
@@ -96,15 +88,9 @@ def generate_presigned_url(storage_path: str, expires_in: int = 900) -> str:
         raise HTTPException(status_code=500, detail=f"URL üretilemedi: {str(e)}")
 
 
-def build_storage_path(
-    org_id: uuid.UUID,
-    project_id: uuid.UUID,
-    file_id: uuid.UUID,
-    filename: str,
-) -> str:
-    """
-    Storage'daki dosya yolunu oluşturur.
+def build_storage_path(org_id: uuid.UUID, project_id: uuid.UUID, file_id: uuid.UUID, filename: str) -> str:
+    """Storage'daki dosya yolunu oluşturur.
     Örn: "orgs/abc-123/projects/xyz-456/files/uuid-789_dosya.pdf"
-    Dosya adını UUID ile önekliyoruz — aynı isimli dosyalar çakışmasın.
+    Dosya adının başına UUID ekliyoruz — aynı isimli dosyalar çakışmasın.
     """
     return f"orgs/{org_id}/projects/{project_id}/files/{file_id}_{filename}"

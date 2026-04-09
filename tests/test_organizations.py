@@ -315,9 +315,10 @@ async def test_list_members_success(auth_client, org):
     assert len(data) >= 1
     assert any(m["role"] == "owner" for m in data)
 
+
 @pytest.mark.asyncio
 async def test_remove_member_success(auth_client, client, org):
-    """Owner org üyesini kaldırabilmeli."""
+    """Owner org üyesini silebilmeli."""
     await client.post("/api/v1/auth/register", json={
         "email": "tobe_removed@example.com",
         "username": "toberemoved",
@@ -351,7 +352,7 @@ async def test_remove_member_success(auth_client, client, org):
 
 @pytest.mark.asyncio
 async def test_remove_owner_forbidden(auth_client, org):
-    """Owner kendisi kaldırılamaz."""
+    """Owner kendisini silemez."""
     me = (await auth_client.get("/api/v1/auth/me")).json()
     response = await auth_client.delete(
         f"/api/v1/organizations/{org['id']}/members/{me['id']}"
@@ -361,7 +362,7 @@ async def test_remove_owner_forbidden(auth_client, org):
 
 @pytest.mark.asyncio
 async def test_remove_member_forbidden_for_viewer(auth_client, client, org):
-    """Viewer üye kaldıramaz."""
+    """Viewer üye silemez."""
     await client.post("/api/v1/auth/register", json={
         "email": "viewer3@example.com",
         "username": "viewer3",
