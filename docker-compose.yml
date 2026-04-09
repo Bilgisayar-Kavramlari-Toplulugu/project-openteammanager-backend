@@ -28,5 +28,19 @@ services:
       timeout: 5s
       retries: 5
 
+  minio:
+    image: minio/minio:latest
+    container_name: otm-minio
+    ports:
+      - "9000:9000"    # API portu (boto3 buraya bağlanır)
+      - "9001:9001"    # MinIO web UI (tarayıcıdan izlemek için)
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
 volumes:
   postgres_data:
+  minio_data:
