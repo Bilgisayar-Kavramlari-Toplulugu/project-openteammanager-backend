@@ -37,6 +37,13 @@ class TaskMoveRequest(BaseModel):
     position: float
 
 
+class UserBrief(BaseModel):
+    id: uuid.UUID
+    username: str
+    full_name: str
+    avatar_url: str | None = None
+    model_config = {"from_attributes": True}
+
 class TaskResponse(BaseModel):
     id: uuid.UUID
     project_id: uuid.UUID
@@ -48,7 +55,9 @@ class TaskResponse(BaseModel):
     priority: str
     task_type: str
     assignee_id: uuid.UUID | None
+    assignee: UserBrief | None = None
     reporter_id: uuid.UUID
+    reporter: UserBrief | None = None
     due_date: datetime | None
     start_date: date | None
     estimated_hours: float | None
@@ -59,5 +68,4 @@ class TaskResponse(BaseModel):
     labels: list[str]
     created_at: datetime
     updated_at: datetime
-
     model_config = {"from_attributes": True}

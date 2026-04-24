@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from app.models.task import Task
+from sqlalchemy.orm import selectinload
 from app.schemas.task import TaskCreate, TaskUpdate, TaskMoveRequest
 from app.services.helpers import require_project_member, get_task_or_404
 
@@ -58,10 +59,12 @@ async def create_task(db: AsyncSession, org_id: uuid.UUID, project_id: uuid.UUID
 async def get_tasks(db: AsyncSession, project_id: uuid.UUID, user_id: uuid.UUID, status: str | None = None, assignee_id: uuid.UUID | None = None, label: str | None = None) -> list[Task]:
     await require_project_member(db, project_id, user_id)
 
-    query = select(Task).where(
+    query = (select(Task)
+    .options(selectinload(Task.assignee), selectinload(Task.reporter))
+    .where(
         Task.project_id == project_id,
         Task.deleted_at.is_(None),
-    )
+    ))
     if status:
         query = query.where(Task.status == status)
     if assignee_id:

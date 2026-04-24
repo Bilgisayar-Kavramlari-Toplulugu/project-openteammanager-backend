@@ -5,6 +5,7 @@ from sqlalchemy import String, Text, ForeignKey, DateTime, Date, Float, Integer,
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
+from sqlalchemy.orm import relationship
 
 
 class Task(Base):
@@ -57,3 +58,5 @@ class Task(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    assignee = relationship("User", foreign_keys=[assignee_id], lazy="select")
+    reporter = relationship("User", foreign_keys=[reporter_id], lazy="select")
