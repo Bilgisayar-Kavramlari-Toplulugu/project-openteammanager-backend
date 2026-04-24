@@ -326,8 +326,9 @@ async def test_list_members_success(auth_client, org):
     response = await auth_client.get(f"/api/v1/organizations/{org['id']}/members")
     assert response.status_code == 200
     data = response.json()
-    assert len(data) >= 1
-    assert any(m["role"] == "owner" for m in data)
+    assert "items" in data
+    assert data["total"] >= 1
+    assert any(m["role"] == "owner" for m in data["items"])
 
 
 @pytest.mark.asyncio
@@ -363,7 +364,7 @@ async def test_remove_member_success(auth_client, client, org):
     members = (await auth_client.get(
         f"/api/v1/organizations/{org['id']}/members"
     )).json()
-    assert not any(m["user_id"] == user_id and m["status"] == "active" for m in members)
+    assert not any(m["user_id"] == user_id and m["status"] == "active" for m in members["items"])
 
 
 @pytest.mark.asyncio

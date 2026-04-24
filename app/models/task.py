@@ -58,5 +58,5 @@ class Task(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
-    assignee = relationship("User", foreign_keys=[assignee_id], lazy="select")
-    reporter = relationship("User", foreign_keys=[reporter_id], lazy="select")
+    assignee = relationship("User", foreign_keys=[assignee_id], lazy="raise")
+    reporter = relationship("User", foreign_keys=[reporter_id], lazy="raise")

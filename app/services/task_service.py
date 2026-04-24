@@ -52,8 +52,7 @@ async def create_task(db: AsyncSession, org_id: uuid.UUID, project_id: uuid.UUID
     )
     db.add(task)
     await db.commit()
-    await db.refresh(task)
-    return task
+    return await get_task_or_404(db, project_id, task.id)
 
 
 async def get_tasks(db: AsyncSession, project_id: uuid.UUID, user_id: uuid.UUID, status: str | None = None, assignee_id: uuid.UUID | None = None, label: str | None = None) -> list[Task]:
@@ -95,8 +94,7 @@ async def update_task(db: AsyncSession, project_id: uuid.UUID, task_id: uuid.UUI
         task.completed_at = None
 
     await db.commit()
-    await db.refresh(task)
-    return task
+    return await get_task_or_404(db, project_id, task_id)
 
 
 async def move_task(db: AsyncSession, project_id: uuid.UUID, task_id: uuid.UUID, data: TaskMoveRequest, user_id: uuid.UUID) -> Task:
@@ -115,8 +113,7 @@ async def move_task(db: AsyncSession, project_id: uuid.UUID, task_id: uuid.UUID,
     await _rebalance_if_needed(db, project_id, data.status)
 
     await db.commit()
-    await db.refresh(task)
-    return task
+    return await get_task_or_404(db, project_id, task_id)
 
 
 async def delete_task(db: AsyncSession, project_id: uuid.UUID, task_id: uuid.UUID, user_id: uuid.UUID):

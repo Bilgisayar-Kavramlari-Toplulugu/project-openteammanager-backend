@@ -4,7 +4,7 @@ from sqlalchemy import String, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
-
+from sqlalchemy.orm import relationship
 
 class OrganizationMember(Base):
     __tablename__ = "organization_members"
@@ -29,6 +29,8 @@ class OrganizationMember(Base):
         DateTime(timezone=True), nullable=True
     )
     status: Mapped[str] = mapped_column(String(20), default="pending")
+
+    user = relationship("User", foreign_keys=[user_id], lazy="raise")
 
     __table_args__ = (
         UniqueConstraint("organization_id", "user_id", name="uq_org_member"),
