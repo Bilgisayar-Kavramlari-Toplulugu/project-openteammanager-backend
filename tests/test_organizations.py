@@ -40,7 +40,7 @@ async def test_create_organization_invalid_slug(auth_client):
 
 
 @pytest.mark.asyncio
-async def test_create_organization_unauthenticated(client):
+async def test_create_organization_unauthenticated(client, completed_setup):
     response = await client.post("/api/v1/organizations", json={
         "name": "My Org",
         "slug": "my-org"
@@ -56,12 +56,14 @@ async def test_list_organizations(auth_client, org):
     assert response.status_code == 200
     data = response.json()
     assert len(data) >= 1
-    assert any(o["slug"] == "test-org" for o in data)
+    assert any(o["id"] == org["id"] for o in data)
 
 
 @pytest.mark.asyncio
 async def test_list_organizations_only_own(auth_client, client, org):
-    """Kullanıcı yalnızca üyesi olduğu organizasyonları görür."""
+    """Kullanıcı yalnızca üyesi olduğu organizasyonları görür.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
         "email": "other@example.com",
         "username": "other",
@@ -79,7 +81,7 @@ async def test_list_organizations_only_own(auth_client, client, org):
     )
     assert response.status_code == 200
     data = response.json()
-    assert not any(o["slug"] == "test-org" for o in data)
+    assert not any(o["id"] == org["id"] for o in data)
 
 
 # --- Organizasyon Detay ---
@@ -100,7 +102,9 @@ async def test_get_organization_not_found(auth_client):
 
 @pytest.mark.asyncio
 async def test_get_organization_forbidden(client, org):
-    """Üye olmayan kullanıcı organizasyon detayını göremez."""
+    """Üye olmayan kullanıcı organizasyon detayını göremez.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
         "email": "outsider@example.com",
         "username": "outsider",
@@ -131,32 +135,34 @@ async def test_update_organization_success(auth_client, org):
 
 
 @pytest.mark.asyncio
-async def test_update_organization_forbidden_for_viewer(auth_client, client, org):
-    """Viewer rolündeki kullanıcı organizasyonu güncelleyemez."""
+async def test_update_organization_forbidden_for_member(auth_client, client, org):
+    """Member rolündeki kullanıcı organizasyonu güncelleyemez.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
-        "email": "viewer@example.com",
-        "username": "viewer",
-        "full_name": "Viewer User",
+        "email": "member@example.com",
+        "username": "member",
+        "full_name": "Memeber User",
         "password": "Test1234!"
     })
     login = await client.post("/api/v1/auth/login", json={
-        "email": "viewer@example.com",
+        "email": "member@example.com",
         "password": "Test1234!"
     })
-    viewer_token = login.json()["access_token"]
-    viewer_id = (await client.get(
+    member_token = login.json()["access_token"]
+    member_id = (await client.get(
         "/api/v1/auth/me",
-        headers={"Authorization": f"Bearer {viewer_token}"}
+        headers={"Authorization": f"Bearer {member_token}"}
     )).json()["id"]
 
     await auth_client.post(f"/api/v1/organizations/{org['id']}/members", json={
-        "user_id": viewer_id,
-        "role": "viewer"
+        "user_id": member_id,
+        "role": "member"
     })
 
     response = await client.patch(
         f"/api/v1/organizations/{org['id']}",
-        headers={"Authorization": f"Bearer {viewer_token}"},
+        headers={"Authorization": f"Bearer {member_token}"},
         json={"name": "Hacked Name"}
     )
     assert response.status_code == 403
@@ -174,32 +180,34 @@ async def test_delete_organization_success(auth_client, org):
 
 
 @pytest.mark.asyncio
-async def test_delete_organization_forbidden_for_admin(auth_client, client, org):
-    """Admin rolündeki kullanıcı organizasyonu silemez, sadece owner silebilir."""
+async def test_delete_organization_forbidden_for_member(auth_client, client, org):
+    """Member rolündeki kullanıcı organizasyonu silemez, sadece owner silebilir.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
-        "email": "admin@example.com",
-        "username": "adminuser",
-        "full_name": "Admin User",
+        "email": "member@example.com",
+        "username": "memberuser",
+        "full_name": "Member User",
         "password": "Test1234!"
     })
     login = await client.post("/api/v1/auth/login", json={
-        "email": "admin@example.com",
+        "email": "member@example.com",
         "password": "Test1234!"
     })
-    admin_token = login.json()["access_token"]
-    admin_id = (await client.get(
+    member_token = login.json()["access_token"]
+    member_id = (await client.get(
         "/api/v1/auth/me",
-        headers={"Authorization": f"Bearer {admin_token}"}
+        headers={"Authorization": f"Bearer {member_token}"}
     )).json()["id"]
 
     await auth_client.post(f"/api/v1/organizations/{org['id']}/members", json={
-        "user_id": admin_id,
-        "role": "admin"
+        "user_id": member_id,
+        "role": "member"
     })
 
     response = await client.delete(
         f"/api/v1/organizations/{org['id']}",
-        headers={"Authorization": f"Bearer {admin_token}"}
+        headers={"Authorization": f"Bearer {member_token}"}
     )
     assert response.status_code == 403
 
@@ -208,6 +216,8 @@ async def test_delete_organization_forbidden_for_admin(auth_client, client, org)
 
 @pytest.mark.asyncio
 async def test_invite_member_success(auth_client, client, org):
+    """TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
         "email": "newmember@example.com",
         "username": "newmember",
@@ -233,7 +243,9 @@ async def test_invite_member_success(auth_client, client, org):
 
 @pytest.mark.asyncio
 async def test_invite_member_duplicate(auth_client, client, org):
-    """Aynı kullanıcıyı iki kez davet etmek 400 döndürmeli."""
+    """Aynı kullanıcıyı iki kez davet etmek 400 döndürmeli.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
         "email": "dup@example.com",
         "username": "dupuser",
@@ -261,16 +273,18 @@ async def test_invite_member_duplicate(auth_client, client, org):
 
 
 @pytest.mark.asyncio
-async def test_invite_member_forbidden_for_viewer(auth_client, client, org):
-    """Viewer üye davet edemez."""
+async def test_invite_member_forbidden_for_member(auth_client, client, org):
+    """Member üye davet edemez.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
-        "email": "v2@example.com",
-        "username": "viewer2",
-        "full_name": "Viewer 2",
+        "email": "m2@example.com",
+        "username": "member2",
+        "full_name": "Member 2",
         "password": "Test1234!"
     })
     v2_login = await client.post("/api/v1/auth/login", json={
-        "email": "v2@example.com",
+        "email": "m2@example.com",
         "password": "Test1234!"
     })
     v2_token = v2_login.json()["access_token"]
@@ -281,7 +295,7 @@ async def test_invite_member_forbidden_for_viewer(auth_client, client, org):
 
     await auth_client.post(f"/api/v1/organizations/{org['id']}/members", json={
         "user_id": v2_id,
-        "role": "viewer"
+        "role": "member"
     })
 
     await client.post("/api/v1/auth/register", json={
@@ -318,7 +332,9 @@ async def test_list_members_success(auth_client, org):
 
 @pytest.mark.asyncio
 async def test_remove_member_success(auth_client, client, org):
-    """Owner org üyesini silebilmeli."""
+    """Owner org üyesini silebilmeli.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
         "email": "tobe_removed@example.com",
         "username": "toberemoved",
@@ -361,16 +377,18 @@ async def test_remove_owner_forbidden(auth_client, org):
 
 
 @pytest.mark.asyncio
-async def test_remove_member_forbidden_for_viewer(auth_client, client, org):
-    """Viewer üye silemez."""
+async def test_remove_member_forbidden_for_member(auth_client, client, org):
+    """Member üye silemez.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
-        "email": "viewer3@example.com",
-        "username": "viewer3",
-        "full_name": "Viewer 3",
+        "email": "member3@example.com",
+        "username": "member3",
+        "full_name": "Member 3",
         "password": "Test1234!"
     })
     login = await client.post("/api/v1/auth/login", json={
-        "email": "viewer3@example.com",
+        "email": "member3@example.com",
         "password": "Test1234!"
     })
     viewer_token = login.json()["access_token"]
@@ -381,7 +399,7 @@ async def test_remove_member_forbidden_for_viewer(auth_client, client, org):
 
     await auth_client.post(f"/api/v1/organizations/{org['id']}/members", json={
         "user_id": viewer_id,
-        "role": "viewer"
+        "role": "member"
     })
 
     me = (await auth_client.get("/api/v1/auth/me")).json()

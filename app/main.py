@@ -8,6 +8,8 @@ from app.routers.projects import router as projects_router
 from app.routers.tasks import router as tasks_router
 from app.routers.task_comments import router as task_comments_router
 from app.routers.attachments import router as attachments_router
+from app.routers.setup import router as setup_router
+from app.middleware.setup_guard import SetupGuardMiddleware
 
 
 app = FastAPI(
@@ -27,6 +29,7 @@ app.add_middleware(
 )
 
 app.add_middleware(RateLimiterMiddleware, storage=InMemoryStorage())
+app.add_middleware(SetupGuardMiddleware)  # en son eklendiği için en önce çalışır
 
 app.include_router(auth_router)
 app.include_router(organizations_router)
@@ -34,7 +37,7 @@ app.include_router(projects_router)
 app.include_router(tasks_router)
 app.include_router(task_comments_router)
 app.include_router(attachments_router)
-
+app.include_router(setup_router)
 
 @app.get("/health", tags=["System"])
 async def health_check():

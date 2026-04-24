@@ -2,7 +2,7 @@ import pytest
 
 
 @pytest.mark.asyncio
-async def test_register_success(client):
+async def test_register_success(client, completed_setup):
     response = await client.post("/api/v1/auth/register", json={
         "email": "test@example.com",
         "username": "testuser",
@@ -19,7 +19,7 @@ async def test_register_success(client):
 
 
 @pytest.mark.asyncio
-async def test_register_duplicate_email(client):
+async def test_register_duplicate_email(client, completed_setup):
     await client.post("/api/v1/auth/register", json={
         "email": "test@example.com",
         "username": "testuser",
@@ -37,7 +37,7 @@ async def test_register_duplicate_email(client):
 
 
 @pytest.mark.asyncio
-async def test_register_duplicate_username(client):
+async def test_register_duplicate_username(client, completed_setup):
     await client.post("/api/v1/auth/register", json={
         "email": "test@example.com",
         "username": "testuser",
@@ -55,7 +55,7 @@ async def test_register_duplicate_username(client):
 
 
 @pytest.mark.asyncio
-async def test_login_success(client):
+async def test_login_success(client, completed_setup):
     await client.post("/api/v1/auth/register", json={
         "email": "test@example.com",
         "username": "testuser",
@@ -73,7 +73,7 @@ async def test_login_success(client):
 
 
 @pytest.mark.asyncio
-async def test_login_wrong_password(client):
+async def test_login_wrong_password(client, completed_setup):
     await client.post("/api/v1/auth/register", json={
         "email": "test@example.com",
         "username": "testuser",
@@ -88,7 +88,7 @@ async def test_login_wrong_password(client):
 
 
 @pytest.mark.asyncio
-async def test_login_nonexistent_user(client):
+async def test_login_nonexistent_user(client, completed_setup):
     response = await client.post("/api/v1/auth/login", json={
         "email": "yok@example.com",
         "password": "Test1234!"
