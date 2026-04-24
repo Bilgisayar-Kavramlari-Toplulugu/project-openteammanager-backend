@@ -38,3 +38,4 @@ __pycache__/
 *.pyc
 .idea/
 ycopg2 .
+migrations/__pycache__/

@@ -40,22 +40,10 @@ async def test_create_project_invalid_status(auth_client, org):
 
 
 @pytest.mark.asyncio
-async def test_create_project_non_org_member_forbidden(auth_client, client, org):
+async def test_create_project_non_org_member_forbidden(outsider_client, org):
     """Organizasyon üyesi olmayan kullanıcı proje oluşturamaz."""
-    await client.post("/api/v1/auth/register", json={
-        "email": "outsider@example.com",
-        "username": "outsider",
-        "full_name": "Outsider",
-        "password": "Test1234!"
-    })
-    login = await client.post("/api/v1/auth/login", json={
-        "email": "outsider@example.com",
-        "password": "Test1234!"
-    })
-    token = login.json()["access_token"]
-    response = await client.post(
+    response = await outsider_client .post(
         f"/api/v1/organizations/{org['id']}/projects",
-        headers={"Authorization": f"Bearer {token}"},
         json={"name": "My Project", "key": "MYP"}
     )
     assert response.status_code == 403
@@ -77,7 +65,9 @@ async def test_list_projects(auth_client, org, project):
 
 @pytest.mark.asyncio
 async def test_list_projects_shows_all_org_projects_with_membership_flag(auth_client, client, org, project):
-    """Org üyesi tüm projeleri görür; üye olmadığı projelerde is_member False döner."""
+    """Org üyesi tüm projeleri görür; üye olmadığı projelerde is_member False döner.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
         "email": "member@example.com",
         "username": "memberuser",
@@ -127,22 +117,10 @@ async def test_get_project_not_found(auth_client, org):
 
 
 @pytest.mark.asyncio
-async def test_get_project_forbidden(client, org, project):
+async def test_get_project_forbidden(outsider_client , org, project):
     """Proje üyesi olmayan kullanıcı proje detayını göremez."""
-    await client.post("/api/v1/auth/register", json={
-        "email": "outsider2@example.com",
-        "username": "outsider2",
-        "full_name": "Outsider 2",
-        "password": "Test1234!"
-    })
-    login = await client.post("/api/v1/auth/login", json={
-        "email": "outsider2@example.com",
-        "password": "Test1234!"
-    })
-    token = login.json()["access_token"]
-    response = await client.get(
-        f"/api/v1/organizations/{org['id']}/projects/{project['id']}",
-        headers={"Authorization": f"Bearer {token}"}
+    response = await outsider_client .get(
+        f"/api/v1/organizations/{org['id']}/projects/{project['id']}"
     )
     assert response.status_code == 403
 
@@ -163,7 +141,9 @@ async def test_update_project_success(auth_client, org, project):
 
 @pytest.mark.asyncio
 async def test_update_project_forbidden_for_viewer(auth_client, client, org, project):
-    """Viewer rolündeki kullanıcı projeyi güncelleyemez."""
+    """Viewer rolündeki kullanıcı projeyi güncelleyemez.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
         "email": "viewer@example.com",
         "username": "vieweruser",
@@ -214,7 +194,9 @@ async def test_delete_project_success(auth_client, org, project):
 
 @pytest.mark.asyncio
 async def test_delete_project_forbidden_for_contributor(auth_client, client, org, project):
-    """Contributor rolündeki kullanıcı projeyi silemez."""
+    """Contributor rolündeki kullanıcı projeyi silemez.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
         "email": "contrib@example.com",
         "username": "contrib",
@@ -251,6 +233,8 @@ async def test_delete_project_forbidden_for_contributor(auth_client, client, org
 
 @pytest.mark.asyncio
 async def test_add_project_member_success(auth_client, client, org, project):
+    """TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
         "email": "newmember@example.com",
         "username": "newmember",
@@ -281,7 +265,9 @@ async def test_add_project_member_success(auth_client, client, org, project):
 
 @pytest.mark.asyncio
 async def test_add_project_member_duplicate(auth_client, client, org, project):
-    """Aynı kullanıcı iki kez eklenemez -> 400 döndürmeli."""
+    """Aynı kullanıcı iki kez eklenemez -> 400 döndürmeli.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
         "email": "dup@example.com",
         "username": "dupuser",
@@ -314,7 +300,9 @@ async def test_add_project_member_duplicate(auth_client, client, org, project):
 
 @pytest.mark.asyncio
 async def test_add_project_member_not_org_member(auth_client, client, org, project):
-    """Organizasyon üyesi olmayan kullanıcı projeye eklenemez."""
+    """Organizasyon üyesi olmayan kullanıcı projeye eklenemez.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await client.post("/api/v1/auth/register", json={
         "email": "nonorg@example.com",
         "username": "nonorg",
@@ -350,7 +338,9 @@ async def test_list_project_members(auth_client, org, project):
 
 @pytest.mark.asyncio
 async def test_list_projects_private_not_visible_to_non_member(auth_client, client, org):
-    """Private proje, üyesi olmayan org kullanıcısına görünmemeli."""
+    """Private proje, üyesi olmayan org kullanıcısına görünmemeli.
+    TODO: BE-10 - davet sistemi tamamlandıktan sonra değişecek
+    """
     await auth_client.post(f"/api/v1/organizations/{org['id']}/projects", json={
         "name": "Private Project",
         "key": "PRV",

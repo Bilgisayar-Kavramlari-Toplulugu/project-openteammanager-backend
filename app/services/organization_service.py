@@ -10,6 +10,9 @@ from datetime import datetime, timezone
 
 
 async def create_organization(db: AsyncSession, data: OrganizationCreate, owner: User) -> Organization:
+    # Sadece owner rolündeki kullanıcı yeni org oluşturabilir
+    await _require_system_owner(db, owner.id)
+
     existing = await db.execute(select(Organization).where(Organization.slug == data.slug))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Bu slug zaten kullanımda")
@@ -19,7 +22,7 @@ async def create_organization(db: AsyncSession, data: OrganizationCreate, owner:
         slug=data.slug,
         description=data.description,
         logo_url=data.logo_url,
-        owner_id=owner.id,
+        owner_id=owner.id
     )
     db.add(org)
     await db.flush()
@@ -34,6 +37,7 @@ async def create_organization(db: AsyncSession, data: OrganizationCreate, owner:
     db.add(member)
     await db.commit()
     await db.refresh(org)
+    org.is_member = True
     return org
 
 
@@ -44,21 +48,25 @@ async def get_organizations(db: AsyncSession, user: User) -> list[Organization]:
         .where(
             OrganizationMember.user_id == user.id,
             OrganizationMember.status == "active",
-            Organization.deleted_at.is_(None),
+            Organization.deleted_at.is_(None)
         )
     )
-    return result.scalars().all()
+    orgs = list(result.scalars().all())
+    for org in orgs:
+        org.is_member = True
+    return orgs
 
 
 async def get_organization(db: AsyncSession, org_id: uuid.UUID, user: User) -> Organization:
     org = await _get_org_or_404(db, org_id)
     await _require_member(db, org_id, user.id)
+    org.is_member = True
     return org
 
 
 async def update_organization(db: AsyncSession, org_id: uuid.UUID, data: OrganizationUpdate, user: User) -> Organization:
     org = await _get_org_or_404(db, org_id)
-    await _require_role(db, org_id, user.id, ["owner", "admin"])
+    await _require_role(db, org_id, user.id, ["owner"])
 
     if data.name is not None:
         org.name = data.name
@@ -69,6 +77,7 @@ async def update_organization(db: AsyncSession, org_id: uuid.UUID, data: Organiz
 
     await db.commit()
     await db.refresh(org)
+    org.is_member = True
     return org
 
 
@@ -93,7 +102,7 @@ async def get_members(db: AsyncSession, org_id: uuid.UUID, user: User) -> list[O
 
 async def invite_member(db: AsyncSession, org_id: uuid.UUID, data: MemberInvite, user: User) -> OrganizationMember:
     await _get_org_or_404(db, org_id)
-    await _require_role(db, org_id, user.id, ["owner", "admin"])
+    await _require_role(db, org_id, user.id, ["owner"])
 
     user_exists = await db.execute(select(User).where(User.id == data.user_id))
     if not user_exists.scalar_one_or_none():
@@ -125,7 +134,7 @@ async def invite_member(db: AsyncSession, org_id: uuid.UUID, data: MemberInvite,
 
 async def remove_member(db: AsyncSession, org_id: uuid.UUID, user_id: uuid.UUID, user: User):
     await _get_org_or_404(db, org_id)
-    await _require_role(db, org_id, user.id, ["owner", "admin"])
+    await _require_role(db, org_id, user.id, ["owner"])
 
     result = await db.execute(
         select(OrganizationMember).where(
@@ -147,7 +156,9 @@ async def remove_member(db: AsyncSession, org_id: uuid.UUID, user_id: uuid.UUID,
 
 async def _get_org_or_404(db: AsyncSession, org_id: uuid.UUID) -> Organization:
     result = await db.execute(
-        select(Organization).where(Organization.id == org_id, Organization.deleted_at.is_(None))
+        select(Organization).where(
+            Organization.id == org_id,
+            Organization.deleted_at.is_(None))
     )
     org = result.scalar_one_or_none()
     if not org:
@@ -178,3 +189,22 @@ async def _require_role(db: AsyncSession, org_id: uuid.UUID, user_id: uuid.UUID,
     member = result.scalar_one_or_none()
     if not member or member.role not in roles:
         raise HTTPException(status_code=403, detail="Bu işlem için yetkiniz yok")
+
+
+async def _require_system_owner(db: AsyncSession, user_id: uuid.UUID):
+    """
+    Kullanıcının herhangi bir org'da owner rolü olup olmadığını kontrol eder.
+    Sadece owner yeni org oluşturabilir.
+    """
+    result = await db.execute(
+        select(OrganizationMember).where(
+            OrganizationMember.user_id == user_id,
+            OrganizationMember.role == "owner",
+            OrganizationMember.status == "active",
+        )
+    )
+    if not result.scalars().first():
+        raise HTTPException(
+            status_code=403,
+            detail="Yeni organizasyon oluşturma yetkisi yalnızca owner rolüne sahip kullanıcılara aittir.",
+        )

@@ -93,23 +93,11 @@ async def test_upload_attachment_invalid_task(auth_client, org, project):
 
 
 @pytest.mark.asyncio
-async def test_upload_attachment_forbidden_non_member(client, org, project):
+async def test_upload_attachment_forbidden_non_member(outsider_client , org, project):
     """Proje üyesi olmayan kullanıcı dosya yükleyememeli."""
-    await client.post("/api/v1/auth/register", json={
-        "email": "outsider@example.com",
-        "username": "outsider",
-        "full_name": "Outsider",
-        "password": "Test1234!"
-    })
-    login = await client.post("/api/v1/auth/login", json={
-        "email": "outsider@example.com",
-        "password": "Test1234!"
-    })
-    token = login.json()["access_token"]
-    response = await client.post(
+    response = await outsider_client .post(
         f"/api/v1/organizations/{org['id']}/projects/{project['id']}/attachments",
-        files={"file": ("test.pdf", io.BytesIO(b"content"), "application/pdf")},
-        headers={"Authorization": f"Bearer {token}"},
+        files={"file": ("test.pdf", io.BytesIO(b"content"), "application/pdf")}
     )
     assert response.status_code == 403
 
@@ -229,23 +217,10 @@ async def test_delete_attachment_removed_from_list(auth_client, org, project, at
 
 
 @pytest.mark.asyncio
-async def test_delete_attachment_forbidden_other_user(client, org, project, attachment):
+async def test_delete_attachment_forbidden_other_user(outsider_client, org, project, attachment):
     """Başkasının dosyasını silemez."""
-    await client.post("/api/v1/auth/register", json={
-        "email": "other@example.com",
-        "username": "other",
-        "full_name": "Other User",
-        "password": "Test1234!"
-    })
-    login = await client.post("/api/v1/auth/login", json={
-        "email": "other@example.com",
-        "password": "Test1234!"
-    })
-    token = login.json()["access_token"]
-    response = await client.delete(
-        f"/api/v1/organizations/{org['id']}/projects/{project['id']}/attachments/{attachment['id']}",
-        headers={"Authorization": f"Bearer {token}"},
-    )
+    response = await outsider_client.delete(
+        f"/api/v1/organizations/{org['id']}/projects/{project['id']}/attachments/{attachment['id']}")
     assert response.status_code == 403
 
 

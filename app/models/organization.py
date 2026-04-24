@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, UTC
-from sqlalchemy import String, Text, ForeignKey, DateTime
+from sqlalchemy import String, Text, ForeignKey, DateTime, Boolean
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
@@ -21,6 +21,8 @@ class Organization(Base):
     )
     plan: Mapped[str] = mapped_column(String(50), default="free")
     settings: Mapped[dict] = mapped_column(JSONB, default=dict)
+    org_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    invite_method: Mapped[str] = mapped_column(String(50), default="email", nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=datetime.now(UTC)
     )

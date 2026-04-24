@@ -30,22 +30,10 @@ async def test_create_comment_empty_content(auth_client, org, project, task):
 
 
 @pytest.mark.asyncio
-async def test_create_comment_forbidden_non_member(client, org, project, task):
+async def test_create_comment_forbidden_non_member(outsider_client, org, project, task):
     """Proje üyesi olmayan kullanıcı yorum ekleyemez."""
-    await client.post("/api/v1/auth/register", json={
-        "email": "outsider@example.com",
-        "username": "outsider",
-        "full_name": "Outsider",
-        "password": "Test1234!"
-    })
-    login = await client.post("/api/v1/auth/login", json={
-        "email": "outsider@example.com",
-        "password": "Test1234!"
-    })
-    token = login.json()["access_token"]
-    response = await client.post(
+    response = await outsider_client.post(
         f"/api/v1/organizations/{org['id']}/projects/{project['id']}/tasks/{task['id']}/comments",
-        headers={"Authorization": f"Bearer {token}"},
         json={"content": "Izinsiz yorum"}
     )
     assert response.status_code == 403
@@ -194,22 +182,10 @@ async def test_update_comment_empty_content(auth_client, org, project, comment):
 
 
 @pytest.mark.asyncio
-async def test_update_comment_forbidden_other_user(client, auth_client, org, project, task, comment):
+async def test_update_comment_forbidden_other_user(outsider_client, org, project, task, comment):
     """Başkasının yorumunu düzenleyemez."""
-    await client.post("/api/v1/auth/register", json={
-        "email": "other@example.com",
-        "username": "other",
-        "full_name": "Other User",
-        "password": "Test1234!"
-    })
-    login = await client.post("/api/v1/auth/login", json={
-        "email": "other@example.com",
-        "password": "Test1234!"
-    })
-    token = login.json()["access_token"]
-    response = await client.patch(
+    response = await outsider_client.patch(
         f"/api/v1/organizations/{org['id']}/projects/{project['id']}/comments/{comment['id']}",
-        headers={"Authorization": f"Bearer {token}"},
         json={"content": "Hacklenmiş yorum"}
     )
     assert response.status_code == 403
@@ -272,23 +248,10 @@ async def test_delete_comment_replies_preserved(auth_client, org, project, task,
 
 
 @pytest.mark.asyncio
-async def test_delete_comment_forbidden_other_user(client, org, project, comment):
+async def test_delete_comment_forbidden_other_user(outsider_client, org, project, comment):
     """Başkasının yorumunu silemez."""
-    await client.post("/api/v1/auth/register", json={
-        "email": "other@example.com",
-        "username": "other",
-        "full_name": "Other User",
-        "password": "Test1234!"
-    })
-    login = await client.post("/api/v1/auth/login", json={
-        "email": "other@example.com",
-        "password": "Test1234!"
-    })
-    token = login.json()["access_token"]
-    response = await client.delete(
-        f"/api/v1/organizations/{org['id']}/projects/{project['id']}/comments/{comment['id']}",
-        headers={"Authorization": f"Bearer {token}"},
-    )
+    response = await outsider_client.delete(
+        f"/api/v1/organizations/{org['id']}/projects/{project['id']}/comments/{comment['id']}")
     assert response.status_code == 403
 
 

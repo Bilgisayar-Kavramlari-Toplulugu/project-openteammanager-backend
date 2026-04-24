@@ -59,22 +59,11 @@ async def test_create_task_with_parent(auth_client, org, project, task):
 
 
 @pytest.mark.asyncio
-async def test_create_task_forbidden_non_member(auth_client, client, org, project):
+async def test_create_task_forbidden_non_member(outsider_client, org, project):
     """Proje üyesi olmayan kullanıcı görev oluşturamaz."""
-    await client.post("/api/v1/auth/register", json={
-        "email": "outsider@example.com",
-        "username": "outsider",
-        "full_name": "Outsider",
-        "password": "Test1234!"
-    })
-    login = await client.post("/api/v1/auth/login", json={
-        "email": "outsider@example.com",
-        "password": "Test1234!"
-    })
-    token = login.json()["access_token"]
-    response = await client.post(
+
+    response = await outsider_client.post(
         f"/api/v1/organizations/{org['id']}/projects/{project['id']}/tasks",
-        headers={"Authorization": f"Bearer {token}"},
         json={"title": "Hacked Task"}
     )
     assert response.status_code == 403
@@ -114,7 +103,7 @@ async def test_list_tasks_filter_by_status(auth_client, org, project):
 
 
 @pytest.mark.asyncio
-async def test_list_tasks_filter_by_assignee(auth_client, client, org, project):
+async def test_list_tasks_filter_by_assignee(auth_client, org, project):
     """Atanan filtresi doğru çalışmalı."""
     me = (await auth_client.get("/api/v1/auth/me")).json()
 

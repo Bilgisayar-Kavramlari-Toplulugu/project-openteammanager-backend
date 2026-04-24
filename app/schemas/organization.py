@@ -32,6 +32,9 @@ class OrganizationResponse(BaseModel):
     logo_url: str | None
     owner_id: uuid.UUID
     plan: str
+    org_type: str | None  # setup wizard'dan geliyor
+    invite_method: str  # email | invite_link | domain_allowlist
+    is_member: bool = False  # kullanıcının bu org'a üye olup olmadığı
     created_at: datetime
     model_config = {"from_attributes": True}
 
@@ -43,8 +46,8 @@ class MemberInvite(BaseModel):
     @field_validator("role")
     @classmethod
     def role_must_be_valid(cls, v):
-        if v not in ("admin", "member", "viewer"):
-            raise ValueError("Geçerli roller: admin, member, viewer")
+        if v not in ["member"]:
+            raise ValueError("Geçerli rol: member")
         return v
 
 
