@@ -2,6 +2,7 @@ import uuid
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.models.project_member import ProjectMember
 from app.models.task import Task
 from app.models.activity_log import ActivityLog
@@ -34,7 +35,9 @@ async def is_project_manager(db: AsyncSession, project_id: uuid.UUID, user_id: u
 async def get_task_or_404(db: AsyncSession, project_id: uuid.UUID, task_id: uuid.UUID) -> Task:
     """Task yoksa veya silinmişse 404 fırlatır."""
     result = await db.execute(
-        select(Task).where(
+        select(Task)
+        .options(selectinload(Task.assignee), selectinload(Task.reporter))
+        .where(
             Task.id == task_id,
             Task.project_id == project_id,
             Task.deleted_at.is_(None),
