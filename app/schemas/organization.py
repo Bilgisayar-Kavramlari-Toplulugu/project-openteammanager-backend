@@ -34,7 +34,7 @@ class OrganizationResponse(BaseModel):
     plan: str
     org_type: str | None  # setup wizard'dan geliyor
     invite_method: str  # email | invite_link | domain_allowlist
-    is_member: bool = False  # kullanıcının bu org'a üye olup olmadığı
+    is_member: bool = False
     created_at: datetime
     model_config = {"from_attributes": True}
 
@@ -57,4 +57,79 @@ class MemberResponse(BaseModel):
     role: str
     status: str
     joined_at: datetime | None
+    model_config = {"from_attributes": True}
+
+
+# ── Üye listeleme
+
+class MemberUserInfo(BaseModel):
+    """Üye listesinde kullanıcı bilgileri."""
+    id: uuid.UUID
+    username: str
+    full_name: str
+    avatar_url: str | None = None
+    email: str
+    model_config = {"from_attributes": True}
+
+
+class MemberListItem(BaseModel):
+    """Üye listesi için tek satır."""
+    id: uuid.UUID  # organization_members.id
+    user_id: uuid.UUID
+    role: str  # owner | member
+    status: str
+    joined_at: datetime | None
+    user: MemberUserInfo
+    model_config = {"from_attributes": True}
+
+
+class PaginatedMembers(BaseModel):
+    items: list[MemberListItem]
+    total: int
+    page: int
+    limit: int
+    has_next: bool
+
+
+# ── Üye profil detayı
+
+class MemberProjectInfo(BaseModel):
+    """Üyenin katıldığı proje özeti."""
+    id: uuid.UUID
+    name: str
+    key: str
+    status: str
+    role: str  # projedeki rolü
+    model_config = {"from_attributes": True}
+
+
+class ActivityFeedItem(BaseModel):
+    """Son aktivite özeti."""
+    action: str
+    entity_type: str
+    created_at: datetime
+    model_config = {"from_attributes": True}
+
+
+class MemberStats(BaseModel):
+    """Üye istatistikleri."""
+    total_projects: int
+    total_tasks: int
+    completed_tasks: int
+
+
+class MemberDetailResponse(BaseModel):
+    """Üye profil detayı."""
+    id: uuid.UUID
+    username: str
+    full_name: str
+    avatar_url: str | None = None
+    email: str
+    timezone: str
+    is_active: bool
+    joined_at: datetime | None  # org'a katılım tarihi
+    org_role: str  # org'daki rolü: owner | member
+    stats: MemberStats
+    projects: list[MemberProjectInfo]
+    recent_activity: list[ActivityFeedItem]
     model_config = {"from_attributes": True}

@@ -33,7 +33,10 @@ async def is_project_manager(db: AsyncSession, project_id: uuid.UUID, user_id: u
 
 
 async def get_task_or_404(db: AsyncSession, project_id: uuid.UUID, task_id: uuid.UUID) -> Task:
-    """Task yoksa veya silinmişse 404 fırlatır."""
+    """Task yoksa veya silinmişse 404 fırlatır.
+    assignee ve reporter selectinload ile yüklenir —
+    lazy="raise" olduğu için explicit yükleme zorunlu.
+    """
     result = await db.execute(
         select(Task)
         .options(selectinload(Task.assignee), selectinload(Task.reporter))
