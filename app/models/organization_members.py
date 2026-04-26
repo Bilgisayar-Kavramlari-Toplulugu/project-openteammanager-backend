@@ -28,6 +28,9 @@ class OrganizationMember(Base):
     joined_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     status: Mapped[str] = mapped_column(String(20), default="pending")
 
     user = relationship("User", foreign_keys=[user_id], lazy="raise")
