@@ -5,9 +5,11 @@ from fastapi import HTTPException, status
 from app.models.user import User
 from app.schemas.auth import RegisterRequest, LoginRequest
 from app.core.security import hash_password, verify_password, create_access_token, create_refresh_token
-
+from app.services import invitation_service
 
 async def register_user(db: AsyncSession, data: RegisterRequest) -> User:
+    await invitation_service.check_domain_and_auto_join(db, new_user)
+
     # Email
     result = await db.execute(select(User).where(User.email == data.email))
     if result.scalar_one_or_none():

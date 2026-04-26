@@ -15,6 +15,7 @@ from app.models.attachment import Attachment
 from app.models.activity_log import ActivityLog
 from app.models.notification import Notification
 from app.models.system_settings import SystemSettings
+from app.models.invitation import Invitation, InviteLink, DomainAllowlist
 
 config = context.config
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
