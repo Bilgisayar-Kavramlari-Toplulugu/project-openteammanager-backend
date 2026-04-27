@@ -8,8 +8,6 @@ from app.core.security import hash_password, verify_password, create_access_toke
 from app.services import invitation_service
 
 async def register_user(db: AsyncSession, data: RegisterRequest) -> User:
-    await invitation_service.check_domain_and_auto_join(db, new_user)
-
     # Email
     result = await db.execute(select(User).where(User.email == data.email))
     if result.scalar_one_or_none():
@@ -36,6 +34,9 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> User:
     db.add(user)
     await db.commit()
     await db.refresh(user)
+
+    await invitation_service.check_domain_and_auto_join(db, user)
+
     return user
 
 
