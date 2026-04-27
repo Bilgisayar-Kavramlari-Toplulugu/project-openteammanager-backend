@@ -11,6 +11,7 @@ from app.routers.attachments import router as attachments_router
 from app.routers.setup import router as setup_router
 from app.middleware.setup_guard import SetupGuardMiddleware
 from app.routers import invitations
+from app.routers import roles
 
 
 app = FastAPI(
@@ -42,6 +43,8 @@ app.include_router(setup_router)
 app.include_router(invitations.router)
 app.include_router(invitations.org_invite_router)
 app.include_router(invitations.project_invite_router)
+app.include_router(roles.router)
+
 
 @app.get("/health", tags=["System"])
 async def health_check():
